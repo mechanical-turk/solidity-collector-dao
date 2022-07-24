@@ -89,9 +89,9 @@ I have an additional field called uint256 maxValue on the buyNFT function. My re
 - Run `npm install` to install all dependencies.
 - Run `npx hardhat test` to run the test suite.
 
-# Design Question
+# Design Discussions
 
-## Question 1
+## Prompt
 
 Per project specs there is no vote delegation; it's not possible for Alice to delegate her voting power to Bob, so that when Bob votes he does so with the voting power of both himself and Alice in a single transaction. This means for someone's vote to count, that person must sign and broadcast their own transaction every time. How would you design your contract to allow for non-transitive vote delegation?
 
@@ -99,7 +99,7 @@ Per project specs there is no vote delegation; it's not possible for Alice to de
 
 For this thought experiment, let's say that by default, every voter has 100 voting power. Let's create a `function getTotalVotingPower(address voter) returns (uint256)`. We can track how much voting power someone has delegated, and how much others have delegated to them, by using these 2 contract properties: `mapping(address => uint256) totalDelegatedTo` and `mapping(address => uint256) totalDelegatedFrom`. The total voting power of a voter is: `100` + `totalDelegatedTo[voter]` - `totalDelegatedFrom[voter]`. And when someone tries to give voting power to a delegate, we check if totalDelegatedFrom[voter] is less than or equal to `100`. This ensures that they are only delegating the "delegatable" - their own - votes, and nobody else's; which in turn ensures that delegation is not transitive. Finally, we'll want voters to be able to undo their delegation, or redistribute their delegation from one member to another. To do this, we can rely on a third variable `mapping(address => mapping(address => uint256)) fromVoterToDelegate`, which is a mapping of mappings and it's used to track how much voting power a given voter has given to a delegate. This can be used to readjust the original `totalDelegatedTo` and `totalDelegatedFrom` mappings when a voter wants to change their delegation.
 
-## Question 2
+## Prompt
 
 What are some problems with implementing transitive vote delegation on-chain? (Transitive means: If A delegates to B, and B delegates to C, then C gains voting power from both A and B, while B has no voting power).
 
